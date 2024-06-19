@@ -6,39 +6,36 @@ const Billing = () => {
   const [billingFormData, setBillingFormData] = useState({
     patient_id: '',
     medicine_name: '',
-    qty_sold: 0
+    qty_sold: 1
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+
   const handleBillingFormChange = (e) => {
-    const { name, value } = e.target;
-    setBillingFormData({
-      ...billingFormData,
-      [name]: name === 'qty_sold' ? parseInt(value) : value
-    });
+    setBillingFormData({ ...billingFormData, medicine_name: e.target.value });
   };
 
-  const handleBillingFormSubmit = (e) => {
+  const handleBillingFormSubmit = async (e) => {
     e.preventDefault();
-    // Create the payload as the backend expects
-    const payload = {
-      patient_id: billingFormData.patient_id,
-      cart: [{
-        medicine_name: billingFormData.medicine_name,
-        qty_sold: billingFormData.qty_sold
-      }]
-    };
-    axios.post('http://localhost:5000/billing', payload)
-      .then(response => {
-        console.log(response.data);
-        setSuccess('Bill generated successfully!');
-        setError(null);
-      })
-      .catch(error => {
-        setError('Error generating bill: ' + error.message);
-        setSuccess(null);
-      });
+
+    // Validate form data (consider using a library like Yup for more complex validation)
+    if (!billingFormData.patient_id || !billingFormData.medicine_name) {
+      setError('Please fill in all required fields (Patient ID and Medicine Name)');
+      return;
+    }
+
+    const payload = { ...billingFormData }; // Destructure to avoid potential mutation issues
+
+    try {
+      const response = await axios.post('http://localhost:5000/billing', payload);
+      console.log(response.data);
+      setSuccess('Bill generated successfully!');
+      setError(null);
+    } catch (error) {
+      setError('Error generating bill: ' + error.message);
+      setSuccess(null);
+    }
   };
 
   return (
@@ -53,7 +50,7 @@ const Billing = () => {
             type="text"
             name="patient_id"
             value={billingFormData.patient_id}
-            onChange={handleBillingFormChange}
+            onChange={(e) => setBillingFormData({ ...billingFormData, patient_id: e.target.value })}
             required
           />
         </Form.Group>
@@ -73,11 +70,14 @@ const Billing = () => {
             type="number"
             name="qty_sold"
             value={billingFormData.qty_sold}
-            onChange={handleBillingFormChange}
+            onChange={(e) => setBillingFormData({ ...billingFormData, qty_sold: parseInt(e.target.value) })}
             required
+            min={1} // Set minimum quantity to 1 (optional)
           />
         </Form.Group>
-        <Button type="submit">Generate Bill</Button>
+        <Button type="submit" disabled={false} >
+          Generate Bill
+        </Button>
       </Form>
     </Container>
   );
