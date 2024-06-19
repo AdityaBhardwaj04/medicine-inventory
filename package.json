@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "jspdf": "^2.5.1",
+    "react-barcode-reader": "^0.0.2"
+  }
+}
