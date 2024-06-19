@@ -54,16 +54,18 @@ const Dashboard = () => {
           </tr>
         </thead>
         <tbody>
-          {sales.map((sale, index) => (
-            <tr key={index}>
-              <td>{sale.patient_id}</td>
-              <td>{sale.medicine_name}</td>
-              <td>{sale.qty_sold}</td>
-              <td>{sale.qty_remaining}</td>
-              <td>{sale.mrp}</td>
-              <td>{sale.bill_amount}</td>
-              <td>{new Date(sale.transaction_time).toLocaleString()}</td>
-            </tr>
+          {sales.map((sale, saleIndex) => (
+            sale.medicines.map((medicine, medIndex) => (
+              <tr key={`${saleIndex}-${medIndex}`}>
+                <td>{sale.patient_id}</td>
+                <td>{medicine.medicine_name}</td>
+                <td>{medicine.qty_sold}</td>
+                <td>{medicine.qty_remaining}</td>
+                <td>{medicine.mrp}</td>
+                <td>{medicine.bill_amount}</td>
+                <td>{new Date(sale.transaction_time).toLocaleString()}</td>
+              </tr>
+            ))
           ))}
         </tbody>
       </Table>

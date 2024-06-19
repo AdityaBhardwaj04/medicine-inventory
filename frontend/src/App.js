@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import AdminStock from './components/AdminStock';
-import Billing from './components/Billing';
+import Billing from './components/BillingPage';
 import Dashboard from './components/Dashboard';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./components/Navbar";
