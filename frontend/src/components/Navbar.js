@@ -1,23 +1,37 @@
 import React from 'react';
-import { Navbar, Nav, Container } from 'react-bootstrap';
-import {Link} from "react-router-dom";
+import { Link } from 'react-router-dom';
 
-const NavigationBar = () => {
+const Navbar = () => {
   return (
-    <Navbar bg="light" expand="lg">
-      <Container>
-        <Navbar.Brand as={Link} to="/">Medicine Inventory</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-            {/*<Nav.Link as={Link} to="/stock">Stock</Nav.Link>*/}
-            <Nav.Link as={Link} to="/billing">Billing</Nav.Link>
-            <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+      <div className="container">
+        <Link className="navbar-brand" to="/">MedInventory</Link>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
+            <li className="nav-item">
+              <Link className="nav-link" to="/">Home</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/admin">Admin Dashboard</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/stock">Stock</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/billing">Billing</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/sales">Sales</Link>
+            </li>
+            {/* Add more nav links here if needed */}
+          </ul>
+        </div>
+      </div>
+    </nav>
   );
 };
 
-export default NavigationBar;
+export default Navbar;

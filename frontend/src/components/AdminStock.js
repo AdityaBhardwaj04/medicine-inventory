@@ -16,6 +16,7 @@ const AdminStock = () => {
   });
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchStock();
@@ -71,12 +72,27 @@ const AdminStock = () => {
     });
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const filteredStock = stock.filter((item) =>
+    item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Container>
       <h1>Stock Information</h1>
       <Button variant="primary" onClick={handleShow}>
         Add/Edit Stock
       </Button>
+      <Form.Control
+        type="text"
+        placeholder="Search for a product..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="mt-3 mb-3"
+      />
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add/Edit Stock</Modal.Title>
@@ -87,31 +103,73 @@ const AdminStock = () => {
           <Form onSubmit={handleSubmit}>
             <Form.Group controlId="productName">
               <Form.Label>Product Name</Form.Label>
-              <Form.Control type="text" name="product_name" value={formData.product_name} onChange={handleChange} required />
+              <Form.Control
+                type="text"
+                name="product_name"
+                value={formData.product_name}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="mfgBy">
               <Form.Label>Manufacturer</Form.Label>
-              <Form.Control type="text" name="mfg_by" value={formData.mfg_by} onChange={handleChange} required />
+              <Form.Control
+                type="text"
+                name="mfg_by"
+                value={formData.mfg_by}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="pack">
               <Form.Label>Pack</Form.Label>
-              <Form.Control type="text" name="pack" value={formData.pack} onChange={handleChange} required />
+              <Form.Control
+                type="text"
+                name="pack"
+                value={formData.pack}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="batch">
               <Form.Label>Batch</Form.Label>
-              <Form.Control type="text" name="batch" value={formData.batch} onChange={handleChange} required />
+              <Form.Control
+                type="text"
+                name="batch"
+                value={formData.batch}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="expiryDate">
               <Form.Label>Expiry Date</Form.Label>
-              <Form.Control type="text" name="exp" value={formData.exp} onChange={handleChange} required />
+              <Form.Control
+                type="text"
+                name="exp"
+                value={formData.exp}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="quantity">
               <Form.Label>Quantity</Form.Label>
-              <Form.Control type="number" name="qty" value={formData.qty} onChange={handleChange} required />
+              <Form.Control
+                type="number"
+                name="qty"
+                value={formData.qty}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Form.Group controlId="mrp">
               <Form.Label>MRP</Form.Label>
-              <Form.Control type="number" name="mrp" value={formData.mrp} onChange={handleChange} required />
+              <Form.Control
+                type="number"
+                name="mrp"
+                value={formData.mrp}
+                onChange={handleChange}
+                required
+              />
             </Form.Group>
             <Button variant="primary" type="submit">
               Submit
@@ -120,32 +178,31 @@ const AdminStock = () => {
         </Modal.Body>
       </Modal>
       <Table striped bordered hover>
-  <thead>
-    <tr>
-      <th>Product Name</th>
-      <th>Manufacturer</th>
-      <th>Pack</th>
-      <th>Batch</th>
-      <th>Expiry Date</th>
-      <th>Quantity</th>
-      <th>MRP</th>
-    </tr>
-  </thead>
-  <tbody>
-    {stock.map((item, index) => (
-      <tr key={index}>
-        <td>{item.product_name}</td>
-        <td>{item.mfg_by}</td>
-        <td>{item.pack}</td>
-        <td>{item.batch}</td>
-        <td>{item.exp}</td>
-        <td>{item.qty}</td>
-        <td>{item.mrp}</td>
-      </tr>
-    ))}
-  </tbody>
-</Table>
-
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Manufacturer</th>
+            <th>Pack</th>
+            <th>Batch</th>
+            <th>Expiry Date</th>
+            <th>Quantity</th>
+            <th>MRP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredStock.map((item, index) => (
+            <tr key={index}>
+              <td>{item.product_name}</td>
+              <td>{item.mfg_by}</td>
+              <td>{item.pack}</td>
+              <td>{item.batch}</td>
+              <td>{item.exp}</td>
+              <td>{item.qty}</td>
+              <td>{item.mrp}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
     </Container>
   );
 };
