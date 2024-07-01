@@ -7,6 +7,10 @@ const Dashboard = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [totalEarningsCash, setTotalEarningsCash] = useState(0);
+  const [totalEarningsOnline, setTotalEarningsOnline] = useState(0);
+  const [amountInHandCash, setAmountInHandCash] = useState(0);
+  const [amountInHandOnline, setAmountInHandOnline] = useState(0);
   const [error, setError] = useState(null);
 
   const fetchSales = useCallback(async () => {
@@ -17,6 +21,10 @@ const Dashboard = () => {
       const response = await axios.get(`http://localhost:5000/sales?start_date=${formattedStartDate}&end_date=${formattedEndDate}`);
       setSales(response.data.sales);
       setTotalEarnings(response.data.total_earnings);
+      setTotalEarningsCash(response.data.amountInHand_cash);
+      setTotalEarningsOnline(response.data.amountInHand_online);
+      setAmountInHandCash(response.data.amountInHand_cash);
+      setAmountInHandOnline(response.data.amountInHand_online);
       setError(null);
     } catch (error) {
       console.error('Error fetching sales data:', error);
@@ -44,11 +52,13 @@ const Dashboard = () => {
         <Button onClick={fetchSales}>Fetch Sales Data</Button>
       </Form>
       <h2>Total Earnings: ₹{totalEarnings}</h2>
+      <h3>Total Cash Collected: ₹{amountInHandCash}</h3>
+      <h3>Total Online Collected: ₹{amountInHandOnline}</h3>
       <div style={{ maxHeight: '400px', overflowY: 'auto', marginBottom: '20px' }}>
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Patient ID</th>
+              <th>Bill Number</th>
               <th>Medicine Name</th>
               <th>Quantity Sold</th>
               <th>Quantity Remaining</th>
@@ -61,7 +71,7 @@ const Dashboard = () => {
             {sales.map((sale, saleIndex) => (
               sale.medicines.map((medicine, medIndex) => (
                 <tr key={`${saleIndex}-${medIndex}`}>
-                  <td>{sale.patient_id}</td>
+                  <td>{sale.bill_number}</td>
                   <td>{medicine.medicine_name}</td>
                   <td>{medicine.qty_sold}</td>
                   <td>{medicine.qty_remaining}</td>

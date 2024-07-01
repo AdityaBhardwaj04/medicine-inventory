@@ -4,11 +4,10 @@ from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 import json
 
-
+# JSONEncoder subclass to handle MongoDB ObjectId and datetime serialization
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, ObjectId):
@@ -16,7 +15,6 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(o, datetime):
             return o.isoformat()
         return json.JSONEncoder.default(self, o)
-
 
 app = Flask(__name__)
 app.json_encoder = JSONEncoder
@@ -44,17 +42,10 @@ logging.basicConfig(level=logging.DEBUG)
 @app.route('/', methods=['GET', 'POST'])
 def home():
     return jsonify("Welcome to MedAPI")
-# Existing stock, billing, sales, medicines, and users routes...
 
 
 @app.route('/stock', methods=['GET', 'POST'])
 def stock():
-
-    # if 'user' not in session:
-    #     return jsonify({"error": "Unauthorized"}), 401
-    # if session['user']['role'] not in ['admin', 'user']:
-    #     return jsonify({"error": "Unauthorized"}), 403
-
     if request.method == 'GET':
         stockcomplete = list(db['stock'].find({}, {'_id': 0}))
         return jsonify(stockcomplete)
@@ -66,14 +57,12 @@ def stock():
 
 @app.route('/billing', methods=['POST'])
 def billing():
-    # if 'user' not in session:
-    #     return jsonify({"error": "Unauthorized"}), 401
-    # if session['user']['role'] not in ['admin', 'user']:
-    #     return jsonify({"error": "Unauthorized"}), 403
-
     data = request.json
     patient_id = data.get('patient_id')
     medicines = data.get('medicines')
+    total_discount = data.get('discount', 0)  # Overall discount in percentage
+    amount_accepted = data.get('amountAccepted', 0)
+    payment_mode = data.get('payment_mode', 'cash')  # Default payment mode is cash
 
     if not (patient_id and medicines):
         return jsonify({"error": "Missing required data: patient_id and medicines are required."}), 400
@@ -86,8 +75,7 @@ def billing():
         qty_sold = item.get('qty_sold')
 
         if not (medicine_name and qty_sold):
-            return jsonify(
-                {"error": "Missing required data in medicines: medicine_name and qty_sold are required."}), 400
+            return jsonify({"error": "Missing required data in medicines: medicine_name and qty_sold are required."}), 400
 
         try:
             qty_sold = int(qty_sold)
@@ -103,7 +91,8 @@ def billing():
         new_qty = int(medicine['qty']) - qty_sold
         db['stock'].update_one({"product_name": medicine_name}, {"$set": {"qty": new_qty}})
 
-        bill_amount = int(medicine['mrp']) * qty_sold
+        amount = int(medicine['mrp']) * qty_sold
+        bill_amount = amount - (int(total_discount)/100)*amount
         total_amount += bill_amount
 
         bill_items.append({
@@ -111,27 +100,54 @@ def billing():
             "qty_sold": qty_sold,
             "qty_remaining": new_qty,
             "mrp": int(medicine['mrp']),
-            "bill_amount": bill_amount
+            "bill_amount": bill_amount,
         })
 
+    # Convert total_discount to a float to ensure arithmetic operation is valid
+    try:
+        total_discount = float(total_discount)
+        amount_accepted = float(amount_accepted)
+    except ValueError:
+        return jsonify({"error": "Invalid discount. It must be a number."}), 400
+
+    # Calculate the total discounted amount
+    total_discounted_amount = total_amount - (total_amount * total_discount / 100)
+    change = amount_accepted - total_discounted_amount
+
+    # Generate a unique Bill Number
+    last_bill = db['transactions'].find_one(sort=[("bill_number", -1)])
+    if last_bill:
+        last_bill_number = int(last_bill['bill_number'].split('-')[1])
+        new_bill_number = f"BILL-{last_bill_number + 1}"
+    else:
+        new_bill_number = "BILL-1"
+
     transaction = {
+        "bill_number": new_bill_number,
         "patient_id": patient_id,
         "medicines": bill_items,
         "total_amount": total_amount,
+        "total_discounted_amount": total_discounted_amount,
+        "amount_accepted": amount_accepted,
+        "change": change,
+        "payment_mode": payment_mode,  # Include payment mode in transaction document
         "transaction_time": datetime.utcnow()
     }
     db['transactions'].insert_one(transaction)
 
-    return jsonify({"message": "Bill generated successfully!", "total_amount": total_amount, "bill_items": bill_items})
+    return jsonify({
+        "message": "Bill generated successfully!",
+        "bill_number": new_bill_number,
+        "total_amount": total_amount,
+        "total_discounted_amount": total_discounted_amount,
+        "amount_accepted": amount_accepted,
+        "change": change,
+        "bill_items": bill_items
+    })
 
 
 @app.route('/sales', methods=['GET'])
 def sales():
-    # if 'user' not in session:
-    #     return jsonify({"error": "Unauthorized"}), 401
-    # if session['user']['role'] != 'admin':
-    #     return jsonify({"error": "Unauthorized"}), 403
-
     try:
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
@@ -146,9 +162,20 @@ def sales():
             "transaction_time": {"$gte": start_date, "$lt": end_date}
         }, {'_id': 0}))
 
-        total_earnings = sum(float(sale['total_amount']) for sale in sales)
+        total_cash = sum(float(sale['total_amount']) for sale in sales if sale.get('payment_mode') == 'cash')
+        total_online = sum(float(sale['total_amount']) for sale in sales if sale.get('payment_mode') == 'online')
+        total_earnings = total_cash + total_online
 
-        return jsonify({"sales": sales, "total_earnings": total_earnings})
+        amountInHand_cash = sum(float(sale['amount_accepted']) for sale in sales if sale.get('payment_mode') == 'cash')
+        amountInHand_online = sum(float(sale['amount_accepted']) for sale in sales if sale.get('payment_mode') == 'online')
+
+        response = {
+            "sales": sales,
+            "total_earnings": total_earnings,
+            "amountInHand_cash": amountInHand_cash,
+            "amountInHand_online": amountInHand_online
+        }
+        return jsonify(response)
     except Exception as e:
         app.logger.error(f"Error fetching sales data: {e}")
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
@@ -174,7 +201,7 @@ def get_users():
         return jsonify({"error": "An error occurred while fetching users"}), 500
 
 
-@app.route('/medicine_mrp', methods=['GET'])
+@app.route('/medicine_details', methods=['GET'])
 def get_medicine_mrp():
     medicine_name = request.args.get('name')
     if not medicine_name:
@@ -184,8 +211,14 @@ def get_medicine_mrp():
     if not medicine:
         return jsonify({"error": "Medicine not found"}), 404
 
-    return jsonify({"mrp": medicine["mrp"]})
+    response = {
+        "mrp": medicine.get("mrp"),
+        "batch_no": medicine.get("batch"),
+        "expiry_date": medicine.get("exp")
+    }
+    return jsonify(response)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
