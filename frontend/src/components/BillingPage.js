@@ -109,46 +109,46 @@ const BillingPage = () => {
 
   const saveTransaction = async () => {
     const transactionData = {
-        patient_id: patientId,
-        patient_name: patientName,
-        patient_phone: patientPhone,
-        discount: discount,
-        amountAccepted: amountAccepted,
-        mode_of_payment: modeOfPayment, // Include mode of payment
-        medicines: cart.map(item => ({
-            medicine_name: item.medicine_name,
-            qty_sold: item.qty_sold,
-            mrp: item.mrp,
-            batch_no: item.batch_no,
-            expiry_date: item.expiry_date,
-            amount: item.amount
-        }))
+      patient_id: patientId,
+      patient_name: patientName,
+      patient_phone: patientPhone,
+      discount: discount,
+      amountAccepted: amountAccepted,
+      mode_of_payment: modeOfPayment, // Include mode of payment
+      medicines: cart.map(item => ({
+        medicine_name: item.medicine_name,
+        qty_sold: item.qty_sold,
+        mrp: item.mrp,
+        batch_no: item.batch_no,
+        expiry_date: item.expiry_date,
+        amount: item.amount
+      }))
     };
 
     try {
-        const response = await fetch('http://localhost:5000/billing', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(transactionData)
-        });
+      const response = await fetch('http://localhost:5000/billing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(transactionData)
+      });
 
-        const result = await response.json();
-        if (response.ok) {
-            console.log('Transaction saved successfully:', result);
-            return true;
-        } else {
-            console.error('Error saving transaction:', result);
-            setErrorMessage('Failed to save transaction.');
-            return false;
-        }
-    } catch (error) {
-        console.error('Error saving transaction:', error);
+      const result = await response.json();
+      if (response.ok) {
+        console.log('Transaction saved successfully:', result);
+        return true;
+      } else {
+        console.error('Error saving transaction:', result);
         setErrorMessage('Failed to save transaction.');
         return false;
+      }
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      setErrorMessage('Failed to save transaction.');
+      return false;
     }
-};
+  };
 
   const calculateDiscountedAmount = () => {
     const totalDiscount = (discount / 100) * totalAmount;
@@ -234,7 +234,7 @@ const BillingPage = () => {
     yPosition += 7.5;
     doc.text(`Rounded Amount: ₹${Math.round(discountedAmount).toFixed(2)}`, 10, yPosition);
     yPosition += 7.5;
-    doc.text(`Amount Accepted: ₹${amountAccepted}`, 10, yPosition);
+    doc.text(`Accepted Amount: ₹${parseFloat(amountAccepted).toFixed(2)}`, 10, yPosition);
     yPosition += 7.5;
     doc.text(`Change: ₹${change.toFixed(2)}`, 10, yPosition);
 
@@ -329,31 +329,6 @@ const BillingPage = () => {
             </Form.Group>
           </Col>
         </Row>
-        <Row>
-          <Col>
-            <Form.Group controlId="formModeOfPayment">
-              <Form.Label>Mode of Payment</Form.Label>
-              <div>
-                <Form.Check
-                  type="radio"
-                  label="Cash"
-                  name="modeOfPayment"
-                  value="Cash"
-                  checked={modeOfPayment === 'Cash'}
-                  onChange={(e) => setModeOfPayment(e.target.value)}
-                />
-                <Form.Check
-                  type="radio"
-                  label="Online"
-                  name="modeOfPayment"
-                  value="Online"
-                  checked={modeOfPayment === 'Online'}
-                  onChange={(e) => setModeOfPayment(e.target.value)}
-                />
-              </div>
-            </Form.Group>
-          </Col>
-        </Row>
         <Button variant="primary" onClick={addToCart} className="mt-3">
           Add to Cart
         </Button>
@@ -420,6 +395,32 @@ const BillingPage = () => {
               value={amountAccepted}
               onChange={(e) => setAmountAccepted(e.target.value)}
             />
+          </Form.Group>
+        </Col>
+      </Row>
+
+      <Row>
+        <Col>
+          <Form.Group controlId="formModeOfPayment">
+            <Form.Label>Mode of Payment</Form.Label>
+            <div>
+              <Form.Check
+                type="radio"
+                label="Cash"
+                name="modeOfPayment"
+                value="Cash"
+                checked={modeOfPayment === 'Cash'}
+                onChange={(e) => setModeOfPayment(e.target.value)}
+              />
+              <Form.Check
+                type="radio"
+                label="Online"
+                name="modeOfPayment"
+                value="Online"
+                checked={modeOfPayment === 'Online'}
+                onChange={(e) => setModeOfPayment(e.target.value)}
+              />
+            </div>
           </Form.Group>
         </Col>
       </Row>
